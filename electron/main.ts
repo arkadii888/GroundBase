@@ -109,10 +109,14 @@ ipcMain.handle("get-telemetry", async () => {
       if (!isFinished) {
         isFinished = true;
         client.close();
+
         try {
-          const data = JSON.parse(msg.toString());
+          let rawString = msg.toString();
+          rawString = rawString.replace(/\b[-+]?nan\b/gi, '"nan"');
+          const data = JSON.parse(rawString);
           resolve({ success: true, data });
         } catch (e) {
+          console.error("Parse error:", e, "String was:", msg.toString());
           resolve({ success: false });
         }
       }
