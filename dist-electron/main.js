@@ -64,6 +64,27 @@ ipcMain.handle("send-command", async (_event, commandText) => {
     }, 2e3);
   });
 });
+ipcMain.handle("get-telemetry", async () => {
+  return new Promise((resolve) => {
+    const client = dgram.createSocket("udp4");
+    client.send(Buffer.from("#telemetry"), 8888, "192.168.4.1");
+    client.on("message", (msg) => {
+      client.close();
+      try {
+        const data = JSON.parse(msg.toString());
+        resolve({ success: true, data });
+      } catch (e) {
+        resolve({ success: false });
+      }
+    });
+    setTimeout(() => {
+      if (!client.closed) {
+        client.close();
+        resolve({ success: false });
+      }
+    }, 500);
+  });
+});
 export {
   MAIN_DIST,
   RENDERER_DIST,

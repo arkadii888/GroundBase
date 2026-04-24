@@ -1,3 +1,7 @@
+*:focus {
+    outline: none !important;
+}
+
 :root {
     --bg-main: #ffffff;
     --bg-panel: #f0f4f9;
@@ -89,27 +93,34 @@ body {
 }
 
 .send-btn {
-    background: transparent;
-    color: var(--text-main);
+    background: var(--accent-blue);
+    color: white;
     border: none;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     cursor: pointer;
-    font-size: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.2s;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    padding: 0;
+    margin-left: 8px;
 }
 
 .send-btn:hover:not(:disabled) {
-    background: #e0e4e9;
+    background: #0842a0;
 }
 
 .send-btn:disabled {
-    opacity: 0.3;
-    cursor: default;
+    background: #ccc;
+    color: #888;
+    cursor: not-allowed;
+}
+
+.send-btn svg {
+    transform: translateX(-1px) translateY(1px);
 }
 
 .control-panel {
