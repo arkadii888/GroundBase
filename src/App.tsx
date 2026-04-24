@@ -20,7 +20,7 @@ function App() {
     relative_altitude_m: "",
     voltage_v: "",
     current_battery_a: "",
-    remainig_percent: "",
+    remaining_percent: "",
   });
 
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -41,7 +41,7 @@ function App() {
           relative_altitude_m: result.data.relative_altitude_m.toString(),
           voltage_v: result.data.voltage_v.toString(),
           current_battery_a: result.data.current_battery_a.toString(),
-          remainig_percent: result.data.remainig_percent.toString(),
+          remaining_percent: result.data.remaining_percent.toString(),
         });
       }
     };
@@ -197,7 +197,7 @@ function App() {
           <div className="telemetry-item">
             <span className="telemetry-label">Remaining Percent</span>
             <span className="telemetry-value">
-              {telemetry.remainig_percent}
+              {telemetry.remaining_percent}
             </span>
           </div>
         </div>
