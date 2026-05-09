@@ -106,9 +106,21 @@ function App() {
               key={m.id}
               className={`message ${m.sender === "user" ? "user-msg" : "drone-msg"} ${m.isError ? "error-msg" : ""}`}
             >
-              {m.text}
+              {m.text.trim() === "Waiting for the mission to begin" ? (
+                <div style={{ display: "inline-flex", alignItems: "center" }}>
+                  Waiting for the mission to begin
+                  <span className="typing-dots">
+                    <span>.</span>
+                    <span>.</span>
+                    <span>.</span>
+                  </span>
+                </div>
+              ) : (
+                m.text
+              )}
             </div>
           ))}
+
           <div ref={chatEndRef} />
         </div>
 
