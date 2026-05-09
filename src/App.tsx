@@ -97,7 +97,7 @@ function App() {
             <h2
               style={{ textAlign: "center", color: "#888", marginTop: "40px" }}
             >
-              Mission Ground Base
+              Ground Base
             </h2>
           )}
 
