@@ -42,22 +42,31 @@ ipcMain.handle("send-command", async (_event, commandText) => {
     const message = Buffer.from(commandText);
     const IP = "192.168.4.1";
     const PORT = 8888;
+    let isFinished = false;
     client.send(message, PORT, IP, (err) => {
-      if (err) {
+      if (err && !isFinished) {
+        isFinished = true;
         client.close();
         resolve({ success: false, error: err.message });
       }
     });
     client.on("message", (msg) => {
-      client.close();
-      resolve({ success: true, data: msg.toString() });
+      if (!isFinished) {
+        isFinished = true;
+        client.close();
+        resolve({ success: true, data: msg.toString() });
+      }
     });
     client.on("error", (err) => {
-      client.close();
-      resolve({ success: false, error: err.message });
+      if (!isFinished) {
+        isFinished = true;
+        client.close();
+        resolve({ success: false, error: err.message });
+      }
     });
     setTimeout(() => {
-      if (!client.closed) {
+      if (!isFinished) {
+        isFinished = true;
         client.close();
         resolve({ success: false, error: "Timeout" });
       }
@@ -67,18 +76,39 @@ ipcMain.handle("send-command", async (_event, commandText) => {
 ipcMain.handle("get-telemetry", async () => {
   return new Promise((resolve) => {
     const client = dgram.createSocket("udp4");
-    client.send(Buffer.from("#telemetry"), 8888, "192.168.4.1");
+    let isFinished = false;
+    client.send(Buffer.from("#telemetry"), 8888, "192.168.4.1", (err) => {
+      if (err && !isFinished) {
+        isFinished = true;
+        client.close();
+        resolve({ success: false });
+      }
+    });
     client.on("message", (msg) => {
-      client.close();
-      try {
-        const data = JSON.parse(msg.toString());
-        resolve({ success: true, data });
-      } catch (e) {
+      if (!isFinished) {
+        isFinished = true;
+        client.close();
+        try {
+          let rawString = msg.toString();
+          rawString = rawString.replace(/\b[-+]?nan\b/gi, '"nan"');
+          const data = JSON.parse(rawString);
+          resolve({ success: true, data });
+        } catch (e) {
+          console.error("Parse error:", e, "String was:", msg.toString());
+          resolve({ success: false });
+        }
+      }
+    });
+    client.on("error", () => {
+      if (!isFinished) {
+        isFinished = true;
+        client.close();
         resolve({ success: false });
       }
     });
     setTimeout(() => {
-      if (!client.closed) {
+      if (!isFinished) {
+        isFinished = true;
         client.close();
         resolve({ success: false });
       }
