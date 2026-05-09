@@ -3,14 +3,14 @@
 }
 
 :root {
-    --bg-main: #ffffff;
-    --bg-panel: #f0f4f9;
-    --text-main: #1f1f1f;
-    --user-msg-bg: #f0f4f9;
-    --drone-msg-bg: #ffffff;
-    --accent-blue: #0b57d0;
-    --danger-red: #d93025;
-    --input-bg: #f0f4f9;
+    --bg-main: #121212;
+    --bg-panel: #1e1e1e;
+    --text-main: #e0e0e0;
+    --user-msg-bg: #2d2d2d;
+    --drone-msg-bg: #1e1e1e;
+    --accent-blue: #3b82f6;
+    --danger-red: #ef4444;
+    --input-bg: #2d2d2d;
 }
 
 body {
@@ -49,6 +49,7 @@ body {
     border-radius: 18px;
     line-height: 1.5;
     word-wrap: break-word;
+    font-size: 18px;
 }
 
 .user-msg {
@@ -61,7 +62,7 @@ body {
     align-self: flex-start;
     background-color: var(--drone-msg-bg);
     border-bottom-left-radius: 4px;
-    border: 1px solid #e0e0e0;
+    border: 1px solid #333333;
 }
 
 .error-msg {
@@ -87,7 +88,7 @@ body {
     background: transparent;
     border: none;
     padding: 15px 10px;
-    font-size: 16px;
+    font-size: 18px;
     outline: none;
     color: var(--text-main);
 }
@@ -110,11 +111,11 @@ body {
 }
 
 .send-btn:hover:not(:disabled) {
-    background: #0842a0;
+    background: #2563eb;
 }
 
 .send-btn:disabled {
-    background: #ccc;
+    background: #444444;
     color: #888;
     cursor: not-allowed;
 }
@@ -128,7 +129,7 @@ body {
     background-color: var(--bg-panel);
     display: flex;
     flex-direction: column;
-    border-left: 1px solid #e0e0e0;
+    border-left: 1px solid #333333;
 }
 
 .controls-top {
@@ -148,16 +149,17 @@ body {
 .control-btn {
     padding: 15px;
     border-radius: 12px;
-    border: 1px solid #dcdcdc;
-    background: white;
+    border: 1px solid #444444;
+    background: var(--bg-panel);
+    color: var(--text-main);
     cursor: pointer;
     font-size: 16px;
     transition: all 0.2s;
 }
 
 .control-btn:hover:not(:disabled) {
-    background: #f8f9fa;
-    border-color: #c7c7c7;
+    background: #2d2d2d;
+    border-color: #555555;
 }
 
 .control-btn:disabled {
@@ -173,13 +175,13 @@ body {
 }
 
 .kill-btn:hover:not(:disabled) {
-    background: #b3261c;
+    background: #dc2626;
 }
 
 .telemetry-bottom {
     flex: 1;
-    background-color: #e8eaed;
-    border-top: 1px solid #dcdcdc;
+    background-color: #121212;
+    border-top: 1px solid #333333;
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -190,16 +192,16 @@ body {
 .telemetry-item {
     display: flex;
     justify-content: space-between;
-    background: white;
+    background: var(--bg-panel);
     padding: 12px 15px;
     border-radius: 8px;
     font-family: "Consolas", "Courier New", monospace;
     font-size: 0.95rem;
-    border: 1px solid #dcdcdc;
+    border: 1px solid #333333;
 }
 
 .telemetry-label {
-    color: #5f6368;
+    color: #a0a0a0;
     font-weight: 600;
     font-family: "Segoe UI", sans-serif;
 }
