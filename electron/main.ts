@@ -21,7 +21,8 @@ let win: BrowserWindow | null;
 
 function createWindow() {
   win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
+    title: "Ground Base",
+    icon: path.join(process.env.VITE_PUBLIC, "logo.svg"),
     webPreferences: {
       preload: path.join(__dirname, "preload.mjs"),
     },
