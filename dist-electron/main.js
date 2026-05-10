@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain } from "electron";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import dgram from "node:dgram";
+import net from "node:net";
 createRequire(import.meta.url);
 const __dirname$1 = path.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = path.join(__dirname$1, "..");
@@ -13,12 +13,14 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 
 let win;
 function createWindow() {
   win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
+    title: "Ground Base",
+    icon: path.join(process.env.VITE_PUBLIC, "logo.svg"),
     webPreferences: {
       preload: path.join(__dirname$1, "preload.mjs")
     }
   });
   win.removeMenu();
+  win.webContents.openDevTools();
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL);
   } else {
@@ -39,81 +41,108 @@ app.on("activate", () => {
 app.whenReady().then(createWindow);
 ipcMain.handle("send-command", async (_event, commandText) => {
   return new Promise((resolve) => {
-    const client = dgram.createSocket("udp4");
-    const message = Buffer.from(commandText);
+    const client = new net.Socket();
     const IP = "192.168.4.1";
     const PORT = 8888;
     let isFinished = false;
-    client.send(message, PORT, IP, (err) => {
-      if (err && !isFinished) {
-        isFinished = true;
-        client.close();
-        resolve({ success: false, error: err.message });
-      }
+    let responseData = Buffer.alloc(0);
+    client.setTimeout(5e3);
+    client.connect(PORT, IP, () => {
+      client.write(commandText);
     });
-    client.on("message", (msg) => {
-      if (!isFinished) {
-        isFinished = true;
-        client.close();
-        resolve({ success: true, data: msg.toString() });
-      }
+    client.on("data", (chunk) => {
+      responseData = Buffer.concat([responseData, chunk]);
     });
+    const processResponse = () => {
+      if (isFinished) return;
+      isFinished = true;
+      client.destroy();
+      if (responseData.length === 0) {
+        resolve({ success: true, data: "" });
+        return;
+      }
+      const checkStr = responseData.subarray(0, 50).toString("utf8");
+      if (checkStr.includes("name:") && responseData.includes("data:")) {
+        const dataIndex = responseData.indexOf("data:");
+        const textPrefix = responseData.subarray(0, dataIndex + 5).toString("utf8");
+        const binaryData = responseData.subarray(dataIndex + 5);
+        const base64Image = binaryData.toString("base64");
+        resolve({ success: true, data: textPrefix + base64Image });
+      } else {
+        resolve({ success: true, data: responseData.toString("utf8") });
+      }
+    };
+    client.on("end", processResponse);
+    client.on("close", processResponse);
     client.on("error", (err) => {
       if (!isFinished) {
         isFinished = true;
-        client.close();
+        client.destroy();
         resolve({ success: false, error: err.message });
       }
     });
-    setTimeout(() => {
+    client.on("timeout", () => {
       if (!isFinished) {
         isFinished = true;
-        client.close();
+        client.destroy();
         resolve({ success: false, error: "Timeout" });
       }
-    }, 2e3);
+    });
   });
 });
 ipcMain.handle("get-telemetry", async () => {
   return new Promise((resolve) => {
-    const client = dgram.createSocket("udp4");
+    const client = new net.Socket();
+    const IP = "192.168.4.1";
+    const PORT = 8888;
     let isFinished = false;
-    client.send(Buffer.from("#telemetry"), 8888, "192.168.4.1", (err) => {
-      if (err && !isFinished) {
-        isFinished = true;
-        client.close();
+    let responseData = Buffer.alloc(0);
+    client.setTimeout(1e3);
+    client.connect(PORT, IP, () => {
+      client.write("#telemetry");
+    });
+    client.on("data", (chunk) => {
+      responseData = Buffer.concat([responseData, chunk]);
+    });
+    const processResponse = () => {
+      if (isFinished) return;
+      isFinished = true;
+      client.destroy();
+      if (responseData.length === 0) {
+        resolve({ success: false });
+        return;
+      }
+      try {
+        let rawString = responseData.toString("utf8");
+        rawString = rawString.replace(/\b[-+]?nan\b/gi, '"nan"');
+        const data = JSON.parse(rawString);
+        resolve({ success: true, data });
+      } catch (e) {
+        console.error(
+          "Parse error:",
+          e,
+          "String was:",
+          responseData.toString("utf8")
+        );
         resolve({ success: false });
       }
-    });
-    client.on("message", (msg) => {
-      if (!isFinished) {
-        isFinished = true;
-        client.close();
-        try {
-          let rawString = msg.toString();
-          rawString = rawString.replace(/\b[-+]?nan\b/gi, '"nan"');
-          const data = JSON.parse(rawString);
-          resolve({ success: true, data });
-        } catch (e) {
-          console.error("Parse error:", e, "String was:", msg.toString());
-          resolve({ success: false });
-        }
-      }
-    });
+    };
+    client.on("end", processResponse);
+    client.on("close", processResponse);
     client.on("error", () => {
       if (!isFinished) {
         isFinished = true;
-        client.close();
+        client.destroy();
         resolve({ success: false });
       }
     });
-    setTimeout(() => {
+    client.on("timeout", () => {
       if (!isFinished) {
         isFinished = true;
-        client.close();
+        client.destroy();
         resolve({ success: false });
       }
-    }, 500);
+    });
   });
 });
 export {

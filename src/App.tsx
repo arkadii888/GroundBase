@@ -6,12 +6,25 @@ interface Message {
   text: string;
   sender: "user" | "drone";
   isError?: boolean;
+  image?: string;
 }
 
+const STORAGE_KEY_MESSAGES = "drone_messages";
+const STORAGE_KEY_MISSION_STATE = "drone_mission_active";
+
 function App() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  //localStorage.clear();
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_MESSAGES);
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const [isMissionActive, setIsMissionActive] = useState<boolean>(() => {
+    return localStorage.getItem(STORAGE_KEY_MISSION_STATE) === "true";
+  });
 
   const [telemetry, setTelemetry] = useState({
     latitude_deg: "",
@@ -24,6 +37,14 @@ function App() {
   });
 
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_MESSAGES, JSON.stringify(messages));
+  }, [messages]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_MISSION_STATE, String(isMissionActive));
+  }, [isMissionActive]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -50,6 +71,77 @@ function App() {
     return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    if (!isMissionActive) return;
+
+    let isPolling = true;
+
+    const pollPhoto = async () => {
+      if (!isPolling) return;
+
+      try {
+        const result = await (window as any).api.sendCommand("#photo");
+
+        console.log("📸 [POLL #photo] Raw result:", result);
+
+        if (result.success && result.data) {
+          const dataStr = result.data as string;
+
+          console.log(
+            "📸 [POLL #photo] Data preview (first 100 chars):",
+            dataStr.substring(0, 100),
+          );
+
+          if (dataStr.includes("name:") && dataStr.includes("data:")) {
+            console.log(
+              "✅ [POLL #photo] Found photo markers! Processing image...",
+            );
+
+            const dataIndex = dataStr.indexOf("data:");
+            let photoData = dataStr.substring(dataIndex + 5).trim();
+            photoData = photoData.replace(/";?$/, "").replace(/^"/, "");
+
+            console.log(
+              "🖼️ [POLL #photo] Base64 string length:",
+              photoData.length,
+            );
+
+            setMessages((prev) => {
+              const newMessages = [...prev];
+              for (let i = newMessages.length - 1; i >= 0; i--) {
+                if (newMessages[i].text.trim() === "Mission in progress") {
+                  newMessages[i] = {
+                    ...newMessages[i],
+                    text: "Mission finished",
+                    image: photoData,
+                  };
+                  break;
+                }
+              }
+              return newMessages;
+            });
+
+            setIsMissionActive(false);
+            isPolling = false;
+          } else {
+            console.log(
+              "⏳ [POLL #photo] Still empty or invalid string, waiting...",
+            );
+          }
+        }
+      } catch (err) {
+        console.error("❌ [POLL #photo] Error during polling:", err);
+      }
+    };
+
+    const intervalId = setInterval(pollPhoto, 1000);
+
+    return () => {
+      isPolling = false;
+      clearInterval(intervalId);
+    };
+  }, [isMissionActive]);
+
   const send = async (command: string) => {
     const textToSend = command.trim();
     if (!textToSend) return;
@@ -66,6 +158,8 @@ function App() {
     try {
       const result = await (window as any).api.sendCommand(textToSend);
 
+      console.log(`💬 [SEND ${textToSend}] Response:`, result);
+
       const droneMsg: Message = {
         id: Date.now() + 1,
         text: result.success ? result.data : `Error: ${result.error}`,
@@ -74,7 +168,18 @@ function App() {
       };
 
       setMessages((prev) => [...prev, droneMsg]);
+
+      if (result.success && result.data.trim() === "Mission in progress") {
+        setIsMissionActive(true);
+        console.log("🚀 Mission started! Polling activated.");
+      }
+
+      if (textToSend === "#kill") {
+        setIsMissionActive(false);
+        console.log("🛑 Kill command sent. Polling deactivated.");
+      }
     } catch (err) {
+      console.error(`❌ [SEND ${textToSend}] Critical error:`, err);
       setMessages((prev) => [
         ...prev,
         {
@@ -84,6 +189,7 @@ function App() {
           isError: true,
         },
       ]);
+      setIsMissionActive(false);
     } finally {
       setLoading(false);
     }
@@ -106,9 +212,9 @@ function App() {
               key={m.id}
               className={`message ${m.sender === "user" ? "user-msg" : "drone-msg"} ${m.isError ? "error-msg" : ""}`}
             >
-              {m.text.trim() === "Waiting for the mission to begin" ? (
+              {m.text.trim() === "Mission in progress" ? (
                 <div style={{ display: "inline-flex", alignItems: "center" }}>
-                  Waiting for the mission to begin
+                  Mission in progress
                   <span className="typing-dots">
                     <span>.</span>
                     <span>.</span>
@@ -117,6 +223,24 @@ function App() {
                 </div>
               ) : (
                 m.text
+              )}
+
+              {m.image && (
+                <div style={{ marginTop: "12px", textAlign: "center" }}>
+                  <img
+                    src={
+                      m.image.startsWith("data:image")
+                        ? m.image
+                        : `data:image/jpeg;base64,${m.image}`
+                    }
+                    alt="Mission result"
+                    style={{
+                      maxWidth: "100%",
+                      borderRadius: "8px",
+                      border: "1px solid #333",
+                    }}
+                  />
+                </div>
               )}
             </div>
           ))}
