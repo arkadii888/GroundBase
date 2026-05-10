@@ -13,7 +13,6 @@ const STORAGE_KEY_MESSAGES = "drone_messages";
 const STORAGE_KEY_MISSION_STATE = "drone_mission_active";
 
 function App() {
-  //localStorage.clear();
   const [messages, setMessages] = useState<Message[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_MESSAGES);
     return saved ? JSON.parse(saved) : [];
@@ -82,29 +81,13 @@ function App() {
       try {
         const result = await (window as any).api.sendCommand("#photo");
 
-        console.log("📸 [POLL #photo] Raw result:", result);
-
         if (result.success && result.data) {
           const dataStr = result.data as string;
 
-          console.log(
-            "📸 [POLL #photo] Data preview (first 100 chars):",
-            dataStr.substring(0, 100),
-          );
-
           if (dataStr.includes("name:") && dataStr.includes("data:")) {
-            console.log(
-              "✅ [POLL #photo] Found photo markers! Processing image...",
-            );
-
             const dataIndex = dataStr.indexOf("data:");
             let photoData = dataStr.substring(dataIndex + 5).trim();
             photoData = photoData.replace(/";?$/, "").replace(/^"/, "");
-
-            console.log(
-              "🖼️ [POLL #photo] Base64 string length:",
-              photoData.length,
-            );
 
             setMessages((prev) => {
               const newMessages = [...prev];
@@ -123,14 +106,10 @@ function App() {
 
             setIsMissionActive(false);
             isPolling = false;
-          } else {
-            console.log(
-              "⏳ [POLL #photo] Still empty or invalid string, waiting...",
-            );
           }
         }
       } catch (err) {
-        console.error("❌ [POLL #photo] Error during polling:", err);
+        console.error("Error during polling:", err);
       }
     };
 
@@ -158,8 +137,6 @@ function App() {
     try {
       const result = await (window as any).api.sendCommand(textToSend);
 
-      console.log(`💬 [SEND ${textToSend}] Response:`, result);
-
       const droneMsg: Message = {
         id: Date.now() + 1,
         text: result.success ? result.data : `Error: ${result.error}`,
@@ -171,15 +148,13 @@ function App() {
 
       if (result.success && result.data.trim() === "Mission in progress") {
         setIsMissionActive(true);
-        console.log("🚀 Mission started! Polling activated.");
       }
 
       if (textToSend === "#kill") {
         setIsMissionActive(false);
-        console.log("🛑 Kill command sent. Polling deactivated.");
       }
     } catch (err) {
-      console.error(`❌ [SEND ${textToSend}] Critical error:`, err);
+      console.error(`Critical error:`, err);
       setMessages((prev) => [
         ...prev,
         {
@@ -193,6 +168,12 @@ function App() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const clearStorage = () => {
+    localStorage.clear();
+    setMessages([]);
+    setIsMissionActive(false);
   };
 
   return (
@@ -338,6 +319,14 @@ function App() {
           </div>
         </div>
       </div>
+
+      <button
+        className="clear-storage-btn"
+        onClick={clearStorage}
+        title="Clear Storage"
+      >
+        🧹
+      </button>
     </div>
   );
 }
