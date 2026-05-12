@@ -95,7 +95,7 @@ function App() {
                 if (newMessages[i].text.trim() === "Mission in progress") {
                   newMessages[i] = {
                     ...newMessages[i],
-                    text: "Mission finished",
+                    text: "Person found at ...",
                     image: photoData,
                   };
                   break;
