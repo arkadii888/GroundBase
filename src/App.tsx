@@ -7,10 +7,29 @@ interface Message {
   sender: "user" | "drone";
   isError?: boolean;
   image?: string;
+  lat?: number;
+  lon?: number;
 }
 
 const STORAGE_KEY_MESSAGES = "drone_messages";
 const STORAGE_KEY_MISSION_STATE = "drone_mission_active";
+
+function formatDMS(coord: number, isLatitude: boolean): string {
+  const absolute = Math.abs(coord);
+  const degrees = Math.floor(absolute);
+  const minutesFloat = (absolute - degrees) * 60;
+  const minutes = Math.floor(minutesFloat);
+  const seconds = ((minutesFloat - minutes) * 60).toFixed(2);
+
+  let direction = "";
+  if (isLatitude) {
+    direction = coord >= 0 ? "N" : "S";
+  } else {
+    direction = coord >= 0 ? "E" : "W";
+  }
+
+  return `${degrees}°${minutes}'${seconds}"${direction}`;
+}
 
 function App() {
   const [messages, setMessages] = useState<Message[]>(() => {
@@ -20,6 +39,7 @@ function App() {
 
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
 
   const [isMissionActive, setIsMissionActive] = useState<boolean>(() => {
     return localStorage.getItem(STORAGE_KEY_MISSION_STATE) === "true";
@@ -85,7 +105,20 @@ function App() {
           const dataStr = result.data as string;
 
           if (dataStr.includes("name:") && dataStr.includes("data:")) {
+            const nameIndex = dataStr.indexOf("name:");
             const dataIndex = dataStr.indexOf("data:");
+
+            const namePart = dataStr.substring(nameIndex + 5, dataIndex);
+
+            const [latStr, lonStr] = namePart.split("?");
+            const lat = parseFloat(latStr);
+            const lon = parseFloat(lonStr);
+
+            let locationText = "Person found at unknown location";
+            if (!isNaN(lat) && !isNaN(lon)) {
+              locationText = `Person found at ${formatDMS(lat, true)}, ${formatDMS(lon, false)}`;
+            }
+
             let photoData = dataStr.substring(dataIndex + 5).trim();
             photoData = photoData.replace(/";?$/, "").replace(/^"/, "");
 
@@ -95,8 +128,10 @@ function App() {
                 if (newMessages[i].text.trim() === "Mission in progress") {
                   newMessages[i] = {
                     ...newMessages[i],
-                    text: "Person found at ...",
+                    text: locationText,
                     image: photoData,
+                    lat: !isNaN(lat) ? lat : undefined,
+                    lon: !isNaN(lon) ? lon : undefined,
                   };
                   break;
                 }
@@ -219,8 +254,27 @@ function App() {
                       maxWidth: "100%",
                       borderRadius: "8px",
                       border: "1px solid #333",
+                      cursor: "zoom-in",
                     }}
+                    onClick={() =>
+                      setFullScreenImage(
+                        m.image!.startsWith("data:image")
+                          ? m.image!
+                          : `data:image/jpeg;base64,${m.image}`,
+                      )
+                    }
                   />
+
+                  {m.lat !== undefined && m.lon !== undefined && (
+                    <a
+                      href={`https://www.google.com/maps?q=${m.lat},${m.lon}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="maps-link"
+                    >
+                      📍 Open in Google Maps
+                    </a>
+                  )}
                 </div>
               )}
             </div>
@@ -327,6 +381,15 @@ function App() {
       >
         🧹
       </button>
+
+      {fullScreenImage && (
+        <div
+          className="fullscreen-modal"
+          onClick={() => setFullScreenImage(null)}
+        >
+          <img src={fullScreenImage} alt="Fullscreen result" />
+        </div>
+      )}
     </div>
   );
 }
