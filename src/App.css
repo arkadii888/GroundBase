@@ -3,14 +3,14 @@
 }
 
 :root {
-    --bg-main: #121212;
-    --bg-panel: #1e1e1e;
-    --text-main: #e0e0e0;
-    --user-msg-bg: #2d2d2d;
-    --drone-msg-bg: #1e1e1e;
-    --accent-blue: #3b82f6;
+    --bg-main: #f3f4f6;
+    --bg-panel: #ffffff;
+    --text-main: #1f2937;
+    --user-msg-bg: #dbeafe;
+    --drone-msg-bg: #ffffff;
+    --accent-blue: #2563eb;
     --danger-red: #ef4444;
-    --input-bg: #2d2d2d;
+    --input-bg: #ffffff;
 }
 
 body {
@@ -56,13 +56,14 @@ body {
     align-self: flex-end;
     background-color: var(--user-msg-bg);
     border-bottom-right-radius: 4px;
+    color: #1e3a8a;
 }
 
 .drone-msg {
     align-self: flex-start;
     background-color: var(--drone-msg-bg);
     border-bottom-left-radius: 4px;
-    border: 1px solid #333333;
+    border: 1px solid #e5e7eb;
 }
 
 .error-msg {
@@ -81,6 +82,10 @@ body {
     padding: 5px 15px;
     display: flex;
     align-items: center;
+    box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e5e7eb;
 }
 
 .input-wrapper input {
@@ -111,12 +116,12 @@ body {
 }
 
 .send-btn:hover:not(:disabled) {
-    background: #2563eb;
+    background: #1d4ed8;
 }
 
 .send-btn:disabled {
-    background: #444444;
-    color: #888;
+    background: #e5e7eb;
+    color: #9ca3af;
     cursor: not-allowed;
 }
 
@@ -129,7 +134,7 @@ body {
     background-color: var(--bg-panel);
     display: flex;
     flex-direction: column;
-    border-left: 1px solid #333333;
+    border-left: 1px solid #e5e7eb;
 }
 
 .controls-top {
@@ -149,7 +154,7 @@ body {
 .control-btn {
     padding: 15px;
     border-radius: 12px;
-    border: 1px solid #444444;
+    border: 1px solid #d1d5db;
     background: var(--bg-panel);
     color: var(--text-main);
     cursor: pointer;
@@ -158,8 +163,8 @@ body {
 }
 
 .control-btn:hover:not(:disabled) {
-    background: #2d2d2d;
-    border-color: #555555;
+    background: #f3f4f6;
+    border-color: #9ca3af;
 }
 
 .control-btn:disabled {
@@ -180,8 +185,8 @@ body {
 
 .telemetry-bottom {
     flex: 1;
-    background-color: #121212;
-    border-top: 1px solid #333333;
+    background-color: #f9fafb;
+    border-top: 1px solid #e5e7eb;
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -197,11 +202,11 @@ body {
     border-radius: 8px;
     font-family: "Consolas", "Courier New", monospace;
     font-size: 0.95rem;
-    border: 1px solid #333333;
+    border: 1px solid #e5e7eb;
 }
 
 .telemetry-label {
-    color: #a0a0a0;
+    color: #6b7280;
     font-weight: 600;
     font-family: "Segoe UI", sans-serif;
 }
@@ -248,7 +253,7 @@ body {
     background: transparent;
     border: none;
     font-size: 20px;
-    opacity: 0.1;
+    opacity: 0.3;
     cursor: pointer;
     transition:
         opacity 0.2s ease,
@@ -258,21 +263,20 @@ body {
 }
 
 .clear-storage-btn:hover {
-    opacity: 0.8;
+    opacity: 1;
     transform: scale(1.1);
 }
 
-/* --- Ссылка на Google Maps --- */
 .maps-link {
     display: inline-flex;
     align-items: center;
     margin-top: 10px;
     padding: 8px 14px;
-    background: #2d2d2d;
-    color: #3b82f6;
+    background: #f3f4f6;
+    color: #2563eb;
     text-decoration: none;
     border-radius: 8px;
-    border: 1px solid #444;
+    border: 1px solid #d1d5db;
     font-size: 15px;
     font-weight: bold;
     transition: all 0.2s;
@@ -280,9 +284,9 @@ body {
 }
 
 .maps-link:hover {
-    background: #3b82f6;
+    background: #2563eb;
     color: white;
-    border-color: #3b82f6;
+    border-color: #2563eb;
 }
 
 .fullscreen-modal {
@@ -291,7 +295,7 @@ body {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.85);
+    background: rgba(255, 255, 255, 0.9);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -303,6 +307,6 @@ body {
     max-width: 90%;
     max-height: 90%;
     border-radius: 10px;
-    box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.15);
     object-fit: contain;
 }
