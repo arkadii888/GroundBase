@@ -4,7 +4,7 @@ A simple Electron-based UI implementation for communicating with [Finch](https:/
 
 ![Local Image](image.png)
 
-## How It Works?
+## How does it work?
 
 System commands are sent using the ```#command``` format. For example:
 
